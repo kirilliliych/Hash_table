@@ -1,47 +1,6 @@
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "list.hpp"
-#include "hash_funcs.hpp"
+#include "hash_table.hpp"
 
-#define aboba printf("aboba %d\n", __LINE__);
-
-const size_t HASH_TABLE_CORRECT_SIZE = (1 << 10) - 5;
-const size_t HASH_TABLE_WRONG_SIZE   =  1 << 10;
-
-enum InputCheck
-{
-    OK = 0,
-    INPUT_ERROR
-};
-
-struct word
-{
-    size_t length = 0;
-    const char *word = nullptr;    
-};
-
-struct text
-{
-    size_t file_size      = 0;
-    size_t words_quantity = 0;
-
-    char *buffer          = nullptr;
-    word *words_array     = nullptr;
-    
-    const char *file_name = nullptr;
-    FILE *file_ptr        = nullptr;
-};
-
-struct hash_table 
-{
-    size_t capacity = 0;    
-    size_t size     = 0;
-    list **data     = nullptr;
-};
-
-size_t GetFileSize(FILE *file)
+size_t get_file_size(FILE *file)
 {
     assert(file != nullptr);
 
@@ -52,29 +11,20 @@ size_t GetFileSize(FILE *file)
     return file_size;
 }
 
-char *GetTextFromFile(text *input_text)
+char *get_text_from_file(text *input_text)
 {
     assert(input_text != nullptr);
 
-    input_text->file_size = GetFileSize(input_text->file_ptr) + 2;             // +2 to get sure that there will be place for final '\n' and '\0'                                       
+    input_text->file_size = get_file_size(input_text->file_ptr) + 1;             // +1 to get sure that there will be place for '\0'                                       
 
     char *buffer = (char *) calloc(input_text->file_size, sizeof(char));
 
-    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, input_text->file_ptr) + 2;
-
-    if (buffer[input_text->file_size - 3] != '\n')
-    {
-        buffer[input_text->file_size - 2] = '\n';                              // if there is no '\n' at the end
-        buffer[input_text->file_size - 1] = '\0';                              // EOF marker
-    }
-    
-    buffer[input_text->file_size - 3] = '\n';
-    buffer[input_text->file_size - 2] = '\0';
+    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, input_text->file_ptr) + 1;
 
     return buffer;
 }
 
-size_t CountWordsQuantity(text *input_text)
+size_t count_words_quantity(text *input_text)
 {
     assert(input_text != nullptr);
 
@@ -93,7 +43,7 @@ size_t CountWordsQuantity(text *input_text)
     return words_quantity;
 }
 
-word *DoWordsArray(text *input_text)
+word *do_words_array(text *input_text)
 {
     assert(input_text != nullptr);
 
@@ -101,7 +51,7 @@ word *DoWordsArray(text *input_text)
 
     size_t word_index = 0;
 
-    const char *new_lexem = strtok(input_text->buffer, " .,)!;\"\n");
+    const char *new_lexem = strtok(input_text->buffer, DELIM);
 
     while (new_lexem != nullptr)
     {
@@ -110,36 +60,35 @@ word *DoWordsArray(text *input_text)
         
         ++word_index;
 
-        new_lexem = strtok(nullptr, " .,)!;\"\n");
+        new_lexem = strtok(nullptr, DELIM);
     }
     
     return words_array;
 }
 
-InputCheck TextInput(text *input_text)
+InputCheck text_input(text *input_text)
 {
     assert(input_text != nullptr);
 
-    input_text->file_name = "War_and_Peace.txt";
-
+    input_text->file_name = FILL_HASH_TABLE_FILE;
     input_text->file_ptr = fopen(input_text->file_name, "r");
     
     if (input_text->file_ptr == nullptr)
     {
-        printf("ERROR int TextInput(): file was not found");
+        printf("ERROR int text_input(): file was not found");
         return InputCheck::INPUT_ERROR;
     }
 
-    input_text->buffer         = GetTextFromFile(input_text);
-    input_text->words_quantity = CountWordsQuantity(input_text); 
-    input_text->words_array    = DoWordsArray(input_text);
+    input_text->buffer         = get_text_from_file(input_text);
+    input_text->words_quantity = count_words_quantity(input_text); 
+    input_text->words_array    = do_words_array(input_text);
 
     fclose(input_text->file_ptr);
 
     return InputCheck::OK;
 }
 
-void FreeMemory(text *input_text) 
+void free_memory(text *input_text) 
 {
     assert(input_text != nullptr);
 
@@ -150,7 +99,15 @@ void FreeMemory(text *input_text)
     input_text->words_array = nullptr;
 }
 
-hash_table *hash_table_new(size_t capacity)
+size_t hash_table_get_index(hash_table *ht, elem_t *key)
+{
+    assert(ht  != nullptr);
+    assert(key != nullptr);
+
+    return (ht->hash_funcs[ht->used_hash_func_index].hash_func)(key) % ht->capacity;
+}
+
+hash_table *hash_table_new(size_t capacity, size_t hash_func_index)
 {
     hash_table *new_ht = (hash_table *) calloc(1, sizeof(hash_table));
     assert(new_ht != nullptr);
@@ -160,6 +117,25 @@ hash_table *hash_table_new(size_t capacity)
 
     new_ht->capacity = capacity;
 
+    new_ht->hash_funcs_quantity = HASH_FUNCS_QUANTITY;
+    new_ht->hash_funcs = (hash_function *) calloc(new_ht->hash_funcs_quantity, sizeof(hash_function));
+
+    new_ht->hash_funcs[0].hash_func = ConstHash;
+    new_ht->hash_funcs[1].hash_func = FirstAsciiHash;
+    new_ht->hash_funcs[2].hash_func = StrlenAsciiHash;
+    new_ht->hash_funcs[3].hash_func = StrlenHash;
+    new_ht->hash_funcs[4].hash_func = RolHash;
+    new_ht->hash_funcs[5].hash_func = Crc32Hash;
+
+    new_ht->hash_funcs[0].hash_func_name = "ConstHash";
+    new_ht->hash_funcs[1].hash_func_name = "FirstAsciiHash";
+    new_ht->hash_funcs[2].hash_func_name = "StrlenAsciiHash";
+    new_ht->hash_funcs[3].hash_func_name = "StrlenHash";
+    new_ht->hash_funcs[4].hash_func_name = "RolHash";
+    new_ht->hash_funcs[5].hash_func_name = "Crc32Hash";
+
+    new_ht->used_hash_func_index = hash_func_index;
+
     return new_ht;
 }
 
@@ -167,9 +143,8 @@ void hash_table_insert(hash_table *ht, elem_t *key)
 {
     assert(ht != nullptr);
     
-    //printf("ht->size: %lu\n", ht->size);
-    size_t index = Crc32Hash(key) % ht->capacity;
-    
+    size_t index = hash_table_get_index(ht, key);
+
     list *elem_place = list_find(ht->data[index], key);
     if (elem_place == nullptr)
     { 
@@ -186,7 +161,7 @@ list *hash_table_find(hash_table *ht, elem_t *key)
 {
     assert(ht != nullptr);
 
-    size_t index = Crc32Hash(key) % ht->capacity;
+    size_t index = hash_table_get_index(ht, key);
 
     return list_find(ht->data[index], key);
 }
@@ -195,14 +170,15 @@ void hash_table_delete(hash_table *ht, elem_t *key)
 {
     assert(ht != nullptr);
 
-    size_t index = Crc32Hash(key) % ht->capacity;
+    size_t index = hash_table_get_index(ht, key);
 
-    if (list_find(ht->data[index], key) == nullptr)
+    list *place = list_find(ht->data[index], key);
+    if (place == nullptr)
     {
         return;
     }
 
-    ht->data[index] = list_erase(ht->data[index], key);
+    ht->data[index] = list_erase(place, key);
     --ht->size;
 }
 
@@ -216,6 +192,8 @@ size_t hash_table_size(hash_table *ht)
 hash_table *hash_table_destroy(hash_table *ht)
 {
     assert(ht != nullptr);
+
+    free(ht->hash_funcs);
 
     for (size_t list_index = 0; list_index < ht->capacity; ++list_index)
     {
@@ -249,7 +227,7 @@ void hash_table_get_list_lengths(hash_table *ht)
 {
     assert(ht != nullptr);
 
-    FILE *file_with_lengths = fopen("lengths.txt", "w+");
+    FILE *file_with_lengths = fopen(LIST_LENGTHS_OUTPUT_FILE_NAME, "w+");
 
     for (size_t list_index = 0; list_index < ht->capacity; ++list_index)
     {
@@ -267,7 +245,7 @@ void hash_table_get_list_lengths(hash_table *ht)
             }
         }
 
-        fprintf(file_with_lengths, "list %lu: %d\n", list_index, list_length);
+        fprintf(file_with_lengths, "list %lu %d\n", list_index, list_length);
     }
 
     fclose(file_with_lengths);
@@ -275,27 +253,48 @@ void hash_table_get_list_lengths(hash_table *ht)
 
 int main()
 {
-    hash_table *ht = hash_table_new(HASH_TABLE_CORRECT_SIZE);
+    //for (size_t hash_index = 6; hash_index < HASH_FUNCS_QUANTITY; ++hash_index)
+    //{
+        hash_table *ht = hash_table_new(HASH_TABLE_CORRECT_SIZE, 5/*hash_index*/);
 
-    text input_text = {};
-    InputCheck input_result = TextInput(&input_text);
-    if (input_result != OK)
-    {
-        return input_result;
-    }
-
-    for (size_t word_index = 0; word_index < input_text.words_quantity; ++word_index)
-    {
-        if (input_text.words_array[word_index].word != nullptr)
+        text input_text = {};
+        InputCheck input_result = text_input(&input_text);
+        if (input_result != OK)
         {
-            hash_table_insert(ht, input_text.words_array[word_index].word);
-            //printf("word_index: %lu\n", word_index);
+            return input_result;
         }
-    }
 
-    //hash_table_dump(ht);
+        for (size_t word_index = 0; word_index < input_text.words_quantity; ++word_index)
+        {
+            if (input_text.words_array[word_index].word != nullptr)
+            {
+                hash_table_insert(ht, input_text.words_array[word_index].word);
+            }
+        }
+        //hash_table_get_list_lengths(ht);
 
-    hash_table_get_list_lengths(ht);
+        FILE *search_from = fopen(SEEK_HASH_TABLE_FILE, "r");
+        if (search_from == nullptr)
+        {
+            printf("File search from was not found\n");
+            
+            return 1;
+        }
 
-    ht = hash_table_destroy(ht);
+        char new_word[MAX_SCANFED_WORD_LENGTH] = {};
+        while (fscanf(search_from, "%s", new_word) != EOF)
+        {
+            for (size_t searching_iter = 0; searching_iter < 100000; ++searching_iter)
+            {
+                hash_table_find(ht, new_word);
+            }
+        }
+
+        fclose(search_from);
+
+        free_memory(&input_text);
+        ht = hash_table_destroy(ht);
+    //}
+    
+    return 0;
 }
