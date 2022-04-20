@@ -1,0 +1,10 @@
+global vstrcmpeqb
+section .text
+
+
+vstrcmpeqb:
+		vpcmpeqb ymm0, ymm1, ymm2
+		vpmovmskb eax, ymm0
+		inc eax
+		ret
+		

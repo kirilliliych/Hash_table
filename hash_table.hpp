@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "list.hpp"
 #include "hash_funcs.hpp"
 
@@ -9,18 +10,21 @@
 
 typedef size_t (*functor)(elem_t *key);
 
-const size_t MAX_SCANFED_WORD_LENGTH = 100;
-const size_t HASH_TABLE_CORRECT_SIZE = (1 << 10) - 5;
-const size_t HASH_TABLE_WRONG_SIZE   =  1 << 10;
+const size_t MAX_SCANFED_WORD_LENGTH      = 100;
+const size_t MAX_WORD_LENGTH              = 32;
 
-const size_t HASH_FUNCS_QUANTITY = 6;
+const size_t HASH_TABLE_CORRECT_SIZE      = (1 << 19) - 5;
 
-const char *DELIM = " .,)!;\"\n";
+const size_t TIMES_SEARCH                 = 100;             
 
-const char *FILL_HASH_TABLE_FILE = "War_and_Peace.txt";
-const char *SEEK_HASH_TABLE_FILE = "dictionary";
+const size_t HASH_FUNCS_QUANTITY          = 6;
 
-const char *LIST_LENGTHS_OUTPUT_FILE_NAME = "lengths6";
+const char *DELIM                         = " .,)!;\"\n";
+
+const char *FILL_HASH_TABLE_FILE          = "War_and_Peace.txt";
+const char *SEEK_HASH_TABLE_FILE          = "dictionary";
+
+const char *LIST_LENGTHS_OUTPUT_FILE_NAME = "Crc32Hash";
 
 
 enum InputCheck
@@ -31,14 +35,8 @@ enum InputCheck
 
 struct hash_function
 {
-    functor hash_func = nullptr;
+    functor hash_func          = nullptr;
     const char *hash_func_name = nullptr;
-};
-
-struct word
-{
-    size_t length = 0;
-    const char *word = nullptr;    
 };
 
 struct text
@@ -47,7 +45,7 @@ struct text
     size_t words_quantity = 0;
 
     char *buffer          = nullptr;
-    word *words_array     = nullptr;
+    char **words_array    = nullptr;
     
     const char *file_name = nullptr;
     FILE *file_ptr        = nullptr;
@@ -58,11 +56,11 @@ struct hash_table
     size_t hash_funcs_quantity  = 0;
     size_t used_hash_func_index = 0; 
 
-    size_t capacity = 0;    
-    size_t size     = 0;
-    list **data     = nullptr;
+    size_t capacity             = 0;    
+    size_t size                 = 0;
+    list **data                 = nullptr;
 
-    hash_function *hash_funcs = nullptr;
+    hash_function *hash_funcs   = nullptr;
 };
 
 
@@ -72,7 +70,7 @@ char *get_text_from_file(text *input_text);
 
 size_t count_words_quantity(text *input_text);
 
-word *do_words_array(text *input_text);
+char **do_words_array(text *input_text);
 
 InputCheck text_input(text *input_text);
 

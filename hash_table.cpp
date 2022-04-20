@@ -43,11 +43,11 @@ size_t count_words_quantity(text *input_text)
     return words_quantity;
 }
 
-word *do_words_array(text *input_text)
+char **do_words_array(text *input_text)
 {
     assert(input_text != nullptr);
 
-    word *words_array = (word *) calloc(input_text->words_quantity, sizeof(word));
+    char **words_array = (char **) calloc(input_text->words_quantity, sizeof(char *));
 
     size_t word_index = 0;
 
@@ -55,14 +55,17 @@ word *do_words_array(text *input_text)
 
     while (new_lexem != nullptr)
     {
-        words_array[word_index].word   = new_lexem;
-        words_array[word_index].length = strlen(new_lexem);
-        
+        words_array[word_index] = (char *) aligned_alloc(MAX_WORD_LENGTH, 
+                                                        (MAX_WORD_LENGTH + 1) * sizeof(char));
+        strncpy(words_array[word_index], new_lexem, MAX_WORD_LENGTH);
+
         ++word_index;
 
         new_lexem = strtok(nullptr, DELIM);
     }
     
+    input_text->words_quantity = word_index;
+
     return words_array;
 }
 
@@ -92,8 +95,14 @@ void free_memory(text *input_text)
 {
     assert(input_text != nullptr);
 
-    free(input_text->buffer);
+    for (size_t word_index = 0; word_index < input_text->words_quantity; ++word_index)
+    {
+        free(input_text->words_array[word_index]);
+        input_text->words_array[word_index] = nullptr;
+    }
     free(input_text->words_array);
+
+    free(input_text->buffer);
 
     input_text->buffer      = nullptr;
     input_text->words_array = nullptr;
@@ -122,8 +131,8 @@ hash_table *hash_table_new(size_t capacity, size_t hash_func_index)
 
     new_ht->hash_funcs[0].hash_func = ConstHash;
     new_ht->hash_funcs[1].hash_func = FirstAsciiHash;
-    new_ht->hash_funcs[2].hash_func = StrlenAsciiHash;
-    new_ht->hash_funcs[3].hash_func = StrlenHash;
+    new_ht->hash_funcs[2].hash_func = StrlenHash;
+    new_ht->hash_funcs[3].hash_func = StrlenAsciiHash;
     new_ht->hash_funcs[4].hash_func = RolHash;
     new_ht->hash_funcs[5].hash_func = Crc32Hash;
 
@@ -144,7 +153,7 @@ void hash_table_insert(hash_table *ht, elem_t *key)
     assert(ht != nullptr);
     
     size_t index = hash_table_get_index(ht, key);
-
+    
     list *elem_place = list_find(ht->data[index], key);
     if (elem_place == nullptr)
     { 
@@ -252,49 +261,51 @@ void hash_table_get_list_lengths(hash_table *ht)
 }
 
 int main()
-{
-    //for (size_t hash_index = 6; hash_index < HASH_FUNCS_QUANTITY; ++hash_index)
-    //{
-        hash_table *ht = hash_table_new(HASH_TABLE_CORRECT_SIZE, 5/*hash_index*/);
+{       
+    hash_table *ht = hash_table_new(HASH_TABLE_CORRECT_SIZE, 5);
 
-        text input_text = {};
-        InputCheck input_result = text_input(&input_text);
-        if (input_result != OK)
-        {
-            return input_result;
-        }
-
-        for (size_t word_index = 0; word_index < input_text.words_quantity; ++word_index)
-        {
-            if (input_text.words_array[word_index].word != nullptr)
-            {
-                hash_table_insert(ht, input_text.words_array[word_index].word);
-            }
-        }
-        //hash_table_get_list_lengths(ht);
-
-        FILE *search_from = fopen(SEEK_HASH_TABLE_FILE, "r");
-        if (search_from == nullptr)
-        {
-            printf("File search from was not found\n");
-            
-            return 1;
-        }
-
-        char new_word[MAX_SCANFED_WORD_LENGTH] = {};
-        while (fscanf(search_from, "%s", new_word) != EOF)
-        {
-            for (size_t searching_iter = 0; searching_iter < 100000; ++searching_iter)
-            {
-                hash_table_find(ht, new_word);
-            }
-        }
-
-        fclose(search_from);
-
-        free_memory(&input_text);
-        ht = hash_table_destroy(ht);
-    //}
+    text input_text = {};
+    InputCheck input_result = text_input(&input_text);
+    if (input_result != OK)
+    {
+        return input_result;
+    }
     
+    for (size_t word_index = 0; word_index < input_text.words_quantity; ++word_index)
+    {
+        if (input_text.words_array[word_index] != nullptr)
+        {
+            hash_table_insert(ht, input_text.words_array[word_index]);
+        }
+    }
+
+    FILE *search_from = fopen(SEEK_HASH_TABLE_FILE, "r");
+    if (search_from == nullptr)
+    {
+        printf("File search from was not found\n");
+        
+        return 1;
+    }
+
+    clock_t start = clock();
+
+    char new_word[MAX_SCANFED_WORD_LENGTH] = {};
+    while (fscanf(search_from, "%s", new_word) != EOF)
+    {
+        for (size_t searching_iter = 0; searching_iter < TIMES_SEARCH; ++searching_iter)
+        {
+            hash_table_find(ht, new_word);
+        }
+    }
+
+    clock_t end = clock();
+
+    printf("Took %Lf seconds\n", ((long double) (end - start)) / CLOCKS_PER_SEC);
+
+    fclose(search_from);
+    
+    free_memory(&input_text);
+    ht = hash_table_destroy(ht);
+
     return 0;
 }

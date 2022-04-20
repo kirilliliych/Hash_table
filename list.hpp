@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <emmintrin.h>
+#include <immintrin.h>
+
+extern "C" int vstrcmpeqb(__m256i str1, __m256i str2);
 
 typedef const char elem_t;
 
@@ -32,5 +36,7 @@ list *list_delete(list *head);
 list *list_next(list *curr);
 
 void list_print(list const *head);
+
+int strcmpeq_asm(const char *str1, const char *str2);
 
 #endif

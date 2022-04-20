@@ -39,7 +39,7 @@ list *list_find(list *head, elem_t *elem)
 
     list *temp = head;
     
-    while (strcmp(elem, temp->value) != 0)
+    while (vstrcmpeqb(*((__m256i *) elem), *((__m256i *) temp->value)) != 0)
     {
         if (temp->next == nullptr)
         {
@@ -62,7 +62,7 @@ list *list_erase(list *head, elem_t *elem)
     list *temp_prev = nullptr;
     list *temp = head;
 
-    while (strcmp(elem, temp->value) != 0)
+    while (vstrcmpeqb(*((__m256i *) elem), *((__m256i *) temp->value)) != 0)
     {
         if (temp->next == nullptr)
         {
@@ -203,4 +203,13 @@ void list_print(list const *head)
         printf("%s", temp->value);
     }
     printf("]\n");
+}
+
+inline int strcmpeq_asm(const char *str1, const char *str2)                                             // no effect
+{   
+    assert(str1 != nullptr);
+    assert(str2 != nullptr);
+
+    return _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i *) str1), 
+                                                  _mm256_loadu_si256((__m256i *) str2))) + 1;
 }
