@@ -21,3 +21,7 @@ all:
 	valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes ./hash_table
 ```
 
+### 1) No optimization
+
+![](Optimization/1_nooptimization.png)
+
