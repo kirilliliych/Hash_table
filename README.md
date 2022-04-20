@@ -23,5 +23,5 @@ all:
 
 ### 1) No optimization
 
-![](Optimization/1_nooptimization.png)
+![ALT](Optimization/1_nooptimization.png)
 
