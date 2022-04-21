@@ -146,7 +146,7 @@ RolHash_asm:
 		ret
 ```
 
-[ALT](Optimization/6_optimizedrolhash.png)
+![ALT](Optimization/6_optimizedrolhash.png)
 
 After the implementation of this code programme has sped up in 2 seconds (new average time is 31.1 second) and instructions quantity 
 has decreased by 2.35 billions. Very small upgrade, but let it be :\
@@ -175,7 +175,7 @@ asm(
        : "rax", "rcx", "rdi"
     );
 ```
-[ALT](Optimization/7_bettercrc32hash.png)
+![ALT](Optimization/7_bettercrc32hash.png)
 
 Although result has been sped up only in 2 seconds comparing to previous programme with Crc32Hash, we have not replaced any new parts of C++ 
 code with assembler code, just modernized old one, portability of the whole programme was not reduced. Therefore, this optimization makes 
