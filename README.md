@@ -114,7 +114,7 @@ Now programme takes 32 secs in average instead of 40 and number of instructions 
 
 ----
 ## Conclusion
-As a result, programme has sped up up to 11.3 times (361.13s -> 32s). Number of instructions has decreased even up to 12.85 times 
+As a result, programme has sped up up to 11.4 times (361.13s -> 31.7s). Number of instructions has decreased even up to 12.85 times 
 (90 billions -> 7 billions)! 
 
 There are only 5 assembly lines in program, so KPD is 11.4 / 5 * 1000 = 2280. Hooray!
