@@ -17,7 +17,7 @@ const size_t HASH_TABLE_CORRECT_SIZE      = (1 << 19) - 1;
 
 const size_t TIMES_SEARCH                 = 100;             
 
-const size_t HASH_FUNCS_QUANTITY          = 6;
+const size_t HASH_FUNCS_QUANTITY          = 7;
 
 const char *DELIM                         = " .,)!;\"\n";
 

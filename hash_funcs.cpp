@@ -19,7 +19,7 @@ size_t StrlenAsciiHash(elem_t *key)
     assert(key != nullptr);
 
     size_t sum = 0;
-
+    
     while (*key != '\0')
     {
         sum += (size_t) (*key);
@@ -62,14 +62,19 @@ size_t Crc32Hash(elem_t *key)
 
     asm(
        ".intel_syntax noprefix\n\t"
+       "mov rcx, 3\n\t"
        "crc32 %0, qword ptr [rdi]\n\t"
-       "crc32 %0, qword ptr [rdi + 8]\n\t"
-       "crc32 %0, qword ptr [rdi + 16]\n\t"
-       "crc32 %0, qword ptr [rdi + 24]\n\t"
+       ".decide_if_again:\n\t"
+       "    add rdi, 8\n\t"
+       "    cmp byte ptr [rdi], 0\n\t"
+       "    je .the_end\n\t"
+       "    crc32 %0, qword ptr [rdi]\n\t"
+       "    loop .decide_if_again\n\t"
+       ".the_end:"
        ".att_syntax prefix\n\t"
        : "=ra" (hash)
        : "rD" (key)
-       : "rax", "rdi"
+       : "rax", "rcx", "rdi"
     );
 
     return hash;

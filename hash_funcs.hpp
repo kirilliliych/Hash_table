@@ -6,6 +6,8 @@
 #include <string.h>
 #include "list.hpp"
 
+extern "C" size_t RolHash_asm(elem_t *key);
+
 const size_t ROL_SHR_SIZE = sizeof(size_t) * 8 - 1;
 
 size_t ConstHash(elem_t *key);

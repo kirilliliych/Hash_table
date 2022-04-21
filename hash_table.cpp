@@ -19,7 +19,8 @@ char *get_text_from_file(text *input_text)
 
     char *buffer = (char *) calloc(input_text->file_size, sizeof(char));
 
-    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, input_text->file_ptr) + 1;
+    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, 
+                                                        input_text->file_ptr) + 1;
 
     return buffer;
 }
@@ -46,7 +47,7 @@ size_t count_words_quantity(text *input_text)
 char **do_words_array(text *input_text)
 {
     assert(input_text != nullptr);
-
+    
     char **words_array = (char **) calloc(input_text->words_quantity, sizeof(char *));
 
     size_t word_index = 0;
@@ -56,12 +57,13 @@ char **do_words_array(text *input_text)
     while (new_lexem != nullptr)
     {
         words_array[word_index] = (char *) aligned_alloc(MAX_WORD_LENGTH, 
-                                                        (MAX_WORD_LENGTH + 1) * sizeof(char));
-        strncpy(words_array[word_index], new_lexem, MAX_WORD_LENGTH);
+                                                        (MAX_WORD_LENGTH) * sizeof(char));
+
+        strncpy(words_array[word_index], new_lexem, MAX_WORD_LENGTH - 1);
 
         ++word_index;
 
-        new_lexem = strtok(nullptr, DELIM);
+        new_lexem = strtok(nullptr, DELIM);        
     }
     
     input_text->words_quantity = word_index;
@@ -81,7 +83,7 @@ InputCheck text_input(text *input_text)
         printf("ERROR int text_input(): file was not found");
         return InputCheck::INPUT_ERROR;
     }
-
+    
     input_text->buffer         = get_text_from_file(input_text);
     input_text->words_quantity = count_words_quantity(input_text); 
     input_text->words_array    = do_words_array(input_text);
@@ -135,6 +137,7 @@ hash_table *hash_table_new(size_t capacity, size_t hash_func_index)
     new_ht->hash_funcs[3].hash_func = StrlenAsciiHash;
     new_ht->hash_funcs[4].hash_func = RolHash;
     new_ht->hash_funcs[5].hash_func = Crc32Hash;
+    new_ht->hash_funcs[6].hash_func = RolHash_asm;
 
     new_ht->hash_funcs[0].hash_func_name = "ConstHash";
     new_ht->hash_funcs[1].hash_func_name = "FirstAsciiHash";
@@ -142,6 +145,7 @@ hash_table *hash_table_new(size_t capacity, size_t hash_func_index)
     new_ht->hash_funcs[3].hash_func_name = "StrlenHash";
     new_ht->hash_funcs[4].hash_func_name = "RolHash";
     new_ht->hash_funcs[5].hash_func_name = "Crc32Hash";
+    new_ht->hash_funcs[6].hash_func_name = "RolHash_asm";
 
     new_ht->used_hash_func_index = hash_func_index;
 
@@ -263,7 +267,7 @@ void hash_table_get_list_lengths(hash_table *ht)
 int main()
 {       
     hash_table *ht = hash_table_new(HASH_TABLE_CORRECT_SIZE, 5);
-
+    
     text input_text = {};
     InputCheck input_result = text_input(&input_text);
     if (input_result != OK)

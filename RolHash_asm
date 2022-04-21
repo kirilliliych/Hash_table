@@ -1,0 +1,20 @@
+global RolHash_asm
+section .text
+
+RolHash_asm:
+		xor rax, rax
+		mov al, [rdi]
+		inc rdi
+		
+.xor_again:	
+		cmp byte [rdi], 0
+		je .the_end
+		
+		rol rax, 1
+		xor al, [rdi] 
+		
+		inc rdi
+		jmp .xor_again
+
+.the_end:		
+		ret
