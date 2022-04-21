@@ -13,7 +13,7 @@ typedef size_t (*functor)(elem_t *key);
 const size_t MAX_SCANFED_WORD_LENGTH      = 100;
 const size_t MAX_WORD_LENGTH              = 32;
 
-const size_t HASH_TABLE_CORRECT_SIZE      = (1 << 19) - 5;
+const size_t HASH_TABLE_CORRECT_SIZE      = (1 << 19) - 1;
 
 const size_t TIMES_SEARCH                 = 100;             
 

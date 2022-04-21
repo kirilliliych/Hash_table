@@ -9,8 +9,6 @@
 #include <emmintrin.h>
 #include <immintrin.h>
 
-extern "C" int vstrcmpeqb(__m256i str1, __m256i str2);
-
 typedef const char elem_t;
 
 struct list
