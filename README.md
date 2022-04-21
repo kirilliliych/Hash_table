@@ -31,7 +31,8 @@ Results of programme without any optimizations. Average time - 361.13 sec.
 ### 1) Optimization 1: CRC32
 We can see that calculating Crc32Hash takes a significant part of time programme works, so it should be optimized.
 It should be mentioned that at this time words inserted in hash table lie in one big buffer while hash table contains pointers to them,
-so we are not able to work with more than one byte in a word at once at the moment. The first optimization was rewriting Crc32Hash function using inline assembly:
+so we are not able to work with more than one byte in a word at once at the moment. The first optimization was rewriting Crc32Hash function 
+using the inline assembler:
 
 ```
 asm (
@@ -110,7 +111,76 @@ strings are equal or not without concretization, it is very convenient to deal w
 
 ![ALT](Optimization/5_strcmpoptimized.png)
 
-Now programme takes 32 secs in average instead of 40 and number of instructions is reduced by 1 billon (around 7 billions now).
+Now programme takes 31.7 secs in average instead of 40 and number of instructions is reduced by 1 billon (around 7 billions now).
+
+### 5) Optimization 5: Better RolHash
+Although RolHash is not as good as Crc32Hash is, its distribution is quite good and therefore it is worth to also work with this type of hash.
+Callgrind shows us that programme with non-optimized version of RolHash gives us the result of 33.1 sec in average. 
+
+![ALT](Optimization/6_nonoptimizedrolhash.png)
+
+But what we can do is to try to optimize this hash function. A nice variant could be the inline assembler, but it was already used.
+Let us give a chance to NASM. We will rewrite RolHash as an external function. Using intrinsics here may be not a reasonable decision because
+assembler has its own ROL instruction which plays a significant role in this hash function. Moving to the code:
+
+```
+global RolHash_asm
+section .text
+
+RolHash_asm:
+		xor rax, rax
+		mov al, [rdi]
+		inc rdi
+		
+.xor_again:	
+		cmp byte [rdi], 0
+		je .the_end
+		
+		rol rax, 1
+		xor al, [rdi] 
+		
+		inc rdi
+		jmp .xor_again
+
+.the_end:		
+		ret
+```
+
+[ALT](Optimization/6_optimizedrolhash.png)
+
+After the implementation of this code programme has sped up in 2 seconds (new average time is 31.1 second) and instructions quantity 
+has decreased by 2.35 billions. Very small upgrade, but let it be :\
+
+### 6) Optimization 6: Stopping Crc32Hash at right moment
+Now it seems that optimized versions of RolHash and Crc32Hash show us almost equal performance (0_o). Obviously, that is not correct, because
+according to the code RolHash stops working when it sees the '\0' symbol while Crc32Hash always works for the whole bunch of 32 bytes. Hence, 
+comparison was quite unfair. Let us make a small correction: each time after calling crc32 (excluding the last) we will check if the next qword 
+block begins with '\0' (this means that word has already ended and there is no sense to continue calculating hash).
+
+```
+asm(
+       ".intel_syntax noprefix\n\t"
+       "mov rcx, 3\n\t"
+       "crc32 %0, qword ptr [rdi]\n\t"
+       ".decide_if_again:\n\t"
+       "    add rdi, 8\n\t"
+       "    cmp byte ptr [rdi], 0\n\t"
+       "    je .the_end\n\t"
+       "    crc32 %0, qword ptr [rdi]\n\t"
+       "    loop .decide_if_again\n\t"
+       ".the_end:"
+       ".att_syntax prefix\n\t"
+       : "=ra" (hash)
+       : "rD" (key)
+       : "rax", "rcx", "rdi"
+    );
+```
+[ALT](Optimization/7_bettercrc32hash.png)
+
+Although result has been sped up only in 2 seconds comparing to previous programme with Crc32Hash, we have not replaced any new parts of C++ 
+code with assembler code, just modernized old one, portability of the whole programme was not reduced. Therefore, this optimization makes 
+sense. New average time of programme working is 29.6 sec. Yes, now we have a bit more instructions (7.3 billons against 7 billions), but time 
+is much more important resource.
 
 ----
 ## Conclusion
