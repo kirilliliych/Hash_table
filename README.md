@@ -105,8 +105,8 @@ from 34.3 billons to ~8 billons (more than 4 times better!)
 
 ### 4) Optimization 4: strcmp
 According to the previous graph, list_find function now takes even more time than calculating hash. But list_find function is highly dependent 
-on strcmp and that can be seen on the image. Therefore, it should be optimized. As all words now are 32 bytes long, it is very convenient to
-deal with this task by using _mm256_testc_si256 intrinsic. 
+on strcmp and that can be seen on the image. Therefore, it should be optimized. As all words now are 32 bytes long and we only need to know whether
+strings are equal or not without concretization, it is very convenient to deal with this task by using _mm256_testc_si256 intrinsic. 
 
 ![ALT](Optimization/5_strcmpoptimized.png)
 
