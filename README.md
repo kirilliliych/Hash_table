@@ -10,7 +10,7 @@ It is obvious that the main applicant to be reorganized is find function. So wha
 In our case the words that will be searched for will be from english-latin dictionary and the place where we will search them is 
 "War and Peace" made by L. Tolstoy.
 Find will be used for 100 times for each word. Callgrind (which is a plugin for valgrind) will gather data about experiment and its result 
-will be processed by KCachegrind utility in graph form. Each optimization result was measured 6 times and average result will be given.
+will be processed by KCachegrind utility in graph form. Each optimization result was measured 6 times and average result is given.
 Pay attention that functions that do not refer to hash table will not be optimized because
 we consider them as a user data we do not have access to.
 
