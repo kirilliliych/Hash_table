@@ -33,12 +33,6 @@ enum InputCheck
     INPUT_ERROR
 };
 
-struct hash_function
-{
-    functor hash_func          = nullptr;
-    const char *hash_func_name = nullptr;
-};
-
 struct text
 {
     size_t file_size      = 0;
@@ -60,7 +54,7 @@ struct hash_table
     size_t size                 = 0;
     list **data                 = nullptr;
 
-    hash_function *hash_funcs   = nullptr;
+    functor *hash_funcs         = nullptr;
 };
 
 

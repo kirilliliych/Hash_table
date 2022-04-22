@@ -115,7 +115,7 @@ size_t hash_table_get_index(hash_table *ht, elem_t *key)
     assert(ht  != nullptr);
     assert(key != nullptr);
 
-    return (ht->hash_funcs[ht->used_hash_func_index].hash_func)(key) % ht->capacity;
+    return (ht->hash_funcs[ht->used_hash_func_index])(key) % ht->capacity;
 }
 
 hash_table *hash_table_new(size_t capacity, size_t hash_func_index)
@@ -129,23 +129,15 @@ hash_table *hash_table_new(size_t capacity, size_t hash_func_index)
     new_ht->capacity = capacity;
 
     new_ht->hash_funcs_quantity = HASH_FUNCS_QUANTITY;
-    new_ht->hash_funcs = (hash_function *) calloc(new_ht->hash_funcs_quantity, sizeof(hash_function));
+    new_ht->hash_funcs = (functor *) calloc(new_ht->hash_funcs_quantity, sizeof(functor));
 
-    new_ht->hash_funcs[0].hash_func = ConstHash;
-    new_ht->hash_funcs[1].hash_func = FirstAsciiHash;
-    new_ht->hash_funcs[2].hash_func = StrlenHash;
-    new_ht->hash_funcs[3].hash_func = StrlenAsciiHash;
-    new_ht->hash_funcs[4].hash_func = RolHash;
-    new_ht->hash_funcs[5].hash_func = Crc32Hash;
-    new_ht->hash_funcs[6].hash_func = RolHash_asm;
-
-    new_ht->hash_funcs[0].hash_func_name = "ConstHash";
-    new_ht->hash_funcs[1].hash_func_name = "FirstAsciiHash";
-    new_ht->hash_funcs[2].hash_func_name = "StrlenAsciiHash";
-    new_ht->hash_funcs[3].hash_func_name = "StrlenHash";
-    new_ht->hash_funcs[4].hash_func_name = "RolHash";
-    new_ht->hash_funcs[5].hash_func_name = "Crc32Hash";
-    new_ht->hash_funcs[6].hash_func_name = "RolHash_asm";
+    new_ht->hash_funcs[0] = ConstHash;
+    new_ht->hash_funcs[1] = FirstAsciiHash;
+    new_ht->hash_funcs[2] = StrlenHash;
+    new_ht->hash_funcs[3] = StrlenAsciiHash;
+    new_ht->hash_funcs[4] = RolHash;
+    new_ht->hash_funcs[5] = Crc32Hash;
+    new_ht->hash_funcs[6] = RolHash_asm;
 
     new_ht->used_hash_func_index = hash_func_index;
 

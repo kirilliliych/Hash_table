@@ -35,6 +35,4 @@ list *list_next(list *curr);
 
 void list_print(list const *head);
 
-int strcmpeq_asm(const char *str1, const char *str2);
-
 #endif
