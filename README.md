@@ -1,8 +1,36 @@
 # Hash table
 ----
+## Hash functions review
+----
+We have written a hash table with separate chaining. It is obvious that for hash table we need to use hash function. What should it main 
+characterisic be? We count hash, get (hash % hash_table_size) value and then a long process of searching for this element in a chain begins. This operation takes a vast majority of hash table worktime. As it is worth to optimize, we need to get as uniform distribution of inserted elements
+as possible in order to not overload some chains while others are empty. So the main hash function requirement is uniform distribution. Let us
+investigate some examples. Hash table capacity will be deliberately decreased to overload chains. The aim is to show distribution of elements
+on a diagram which is created by gnuplot utility (hash functions code can be seen in hash_funcs.cpp file, diagrams with the same scale are
+in Hashes directory).
+
+### Const hash
+![ALT](Hashes/default/ConstHash.png)
+
+### First ascii code hash
+![ALT](Hashes/default/FirstAsciiHash.png)
+
+### Strlen hash
+![ALT](Hashes/default/StrlenHash.png)
+
+### Sum of ascii codes hash
+![ALT](Hashes/default/StrlenAsciiHash.png)
+
+### Rol hash
+![AlT](Hashes/default/RolHash.png)
+
+### Crc32 hash
+![ALT](Hashes/default/Crc32Hash.png)
+
+----
 ## Hash table optimizations
 ----
-Now we have written hash table, collision resolution is separate chaining. As it is a data structure, it would be a nice idea to implement
+We have written a hash table, collision resolution is separate chaining. As it is a data structure, it would be a nice idea to implement
 it as efficiently as possible.
 Therefore, there is a question: can we rewrite some code in order to speed our hash table up? Let us try.
 
@@ -184,7 +212,7 @@ is much more important resource.
 
 ----
 ## Conclusion
-As a result, programme has sped up up to 11.4 times (361.13s -> 31.7s). Number of instructions has decreased even up to 12.85 times 
-(90 billions -> 7 billions)! 
+As a result, programme has sped up up to 12.2 times (361.13s -> 31.7s). Number of instructions has decreased even up to 12.33 times 
+(90 billions -> 7.3 billions)! 
 
-There are only 5 assembly lines in program, so KPD is 11.4 / 5 * 1000 = 2280. Hooray!
+There are only 21 assembler lines in program, so KPD is 12.2 / 21 * 1000 = 581. Hooray!
