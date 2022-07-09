@@ -215,4 +215,4 @@ is much more important resource.
 As a result, programme has sped up up to 12.2 times (361.13s -> 29.6s). Number of instructions has decreased even up to 12.33 times 
 (90 billions -> 7.3 billions)! 
 
-There are only 21 assembler lines in program, so KPD is 12.2 / 21 * 1000 = 581. Hooray!
+There are only 21 assembler lines in program, so efficiency parameter is 12.2 / 21 * 1000 = 581. Hooray!
